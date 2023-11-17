@@ -1,0 +1,14 @@
+{% extends 'main.html' %}
+
+<title>Projects</title>
+
+{% block content %}
+    {% csrf_token %}
+    <h1>List of Projects</h1>
+    <ul>
+        {% for project in projects %}
+            <li><a href="{% url 'project-detail' project.id %}">{{ project.name }}</a></li>
+        {% endfor %}
+    </ul>
+    <a href="{% url 'create-project' %}">Want to create new project?</a>
+{% endblock %}

@@ -1,0 +1,24 @@
+{% extends 'main.html' %}
+
+{% block content %}
+    {% csrf_token %}
+    <h1>
+        <strong>
+                Completed tasks:
+        </strong>
+    </h1>
+    <ul>
+        {% for task in completed_task %}
+            <li>
+                {{ task.name }}
+                {% if task.description %}
+                    <br>Description: {{ task.description }}
+                {% endif %}
+                {% if task.deadline %}
+                    <br>Deadline: {{ task.deadline }}
+                {% endif %}
+                <a href="{% url 'delete-task' task.id %}">Delete</a>
+            </li>
+        {% endfor %}
+    </ul>
+{% endblock %}

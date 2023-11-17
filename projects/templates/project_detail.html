@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block content %}
+    <h1>{{ project.title }}</h1>
+    <br>
+    Created by: <a href="{% url 'profile' %}">{{ project.creator }}</a>
+    <br>
+    {% if project.members.count > 0 %}
+        Count of members: {{ project.members.count }}
+    {% endif %}
+    <br><br>
+    <h2>Folders:</h2>
+    <ul>
+        {% for folder in folders %}
+            <br>
+            <li>
+                <a href="{% url 'folder-detail' folder.id %}">{{ folder.name }}</a>
+            </li>
+        {% endfor %}
+    </ul>
+
+    <a href="{% url 'create-folderp' project.id %}">Create folder</a>
+    <a href="{% url 'update-project' project.id %}" class="btn btn-primary">Edit</a>
+    <a href="{% url 'delete-project' project.id %}" class="btn btn-danger">Delete</a>
+    <a href="{% url 'add-member' project.id %}">Add member</a>
+{% endblock %}

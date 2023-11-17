@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h2>Search Results for "{{ query }}"</h2>
+
+    {% if tasks and folders and projects %}
+
+        {% if tasks %}
+            <h3>Tasks:</h3>
+            <ul>
+                {% for task in tasks %}
+                    <li><a href="{% url 'task-detail' task.id %}">{{ task.name }}</a></li>
+                    {% if task.folder %}
+                        Folder: <a href="{% url 'folder-detail' task.folder.id %}">{{ task.folder.name }}</a>
+                    {% endif %}
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        {% if folders %}
+            <h4>Folders:</h4>
+            <ul>
+                {% for folder in folders %}
+                    <li><a href="{% url 'folder-detail' folder.id %}">{{ folder.name }}</a></li>
+                    {% if folder.project %}
+                        Project: <a href="{% url 'project-detail' project_id %}">{{ projects.name }}</a>
+                    {% endif %}
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        {% if projects %}
+            <h5>Projects:</h5>
+                <ul>
+                    {% for project in projects %}
+                    <li><a href="{% url 'project-detail' project_id %}">{{ project.name }}</a></li>
+                    {% endfor %}
+                </ul>
+        {% endif %}
+
+    {% elif tasks %}
+        <h6>Tasks:</h6>
+            <ul>
+                {% for task in tasks %}
+                    <li><a href="{% url 'task-detail' task.id %}">{{ task.name }}</a></li>
+                    {% if task.folder %}
+                        Folder: <a href="{% url 'folder-detail' task.folder.id %}">{{ task.folder.name }}</a>
+                    {% endif %}
+                {% endfor %}
+            </ul>
+        <p>Cannot find the Folder</p>
+
+    {% elif folders %}
+        <h7>Folders:</h7>
+            <ul>
+                {% for folder in folders %}
+                    <li><a href="{% url 'folder-detail' folder.id %}">{{ folder.name }}</a></li>
+                    {% if folder.project %}
+                        Project: <a href="{% url 'project-detail' project_id %}">{{ projects.name }}</a>
+                    {% endif %}
+                {% endfor %}
+            </ul>
+        <p>Cannot find the Task</p>
+
+
+
+    {% endif %}
+
+{% endblock %}

@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h1>{{ folder.name }}</h1>
+
+    <h2>Tasks in this Folder:</h2>
+    <ul>
+        {% for task in folder.tasks.all %}
+            <br>
+            <li>
+                {{ task.name }}
+                {% if task.description %}
+                    <br>Description: {{ task.description }}
+                {% endif %}
+                {% if task.deadline %}
+                    <br>Deadline: {{ task.deadline|date:"Y-m-d H:i" }}
+                {% endif %}
+                {% if task.created %}
+                    <br>Created: {{ task.created|date:"Y-m-d H:i"  }}
+                {% endif %}
+                <input type="checkbox" value="completed" {% if task.is_completed %}checked{% endif %}>
+                <a href="{% url 'update-task' task.id %}" class="btn btn-primary">Edit task</a>
+                <a href="{% url 'delete-task' task.id %}" class="btn btn-danger">Delete task</a>
+            </li>
+        {% endfor %}
+    </ul>
+
+    <a href="{% url 'create-taskf' folder.id %}" class="btn btn-primary">Create Task</a>
+    <a href="{% url 'delete-folder' folder.id %}" class="btn btn-danger">Delete Folder</a>
+{% endblock %}

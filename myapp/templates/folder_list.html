@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+<title>Folders</title>
+
+{% block content %}
+    {% csrf_token %}
+    <h1>List of Folders</h1>
+    <ul>
+        {% for folder in folders %}
+            <li><a href="{% url 'folder-detail' folder.id %}">{{ folder.name }}</a></li>
+        {% endfor %}
+    </ul>
+{% endblock %}

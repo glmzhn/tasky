@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h2>Login</h2>
+    <form action="" method="post" class="px-4 py-3">
+        {% csrf_token %}
+
+        <div class="mb-3">
+            <label for="exampleDropdownFormEmail1" class="form-label">Username</label>
+            <input type="text" class="form-control" id="exampleDropdownFormEmail1" name="username" placeholder="username">
+        </div>
+        <div class="mb-3">
+            <label for="exampleDropdownFormPassword1" class="form-label">Password</label>
+            <input type="password" class="form-control" id="exampleDropdownFormPassword1" name="password" placeholder="password">
+        </div>
+        <button type="submit" class="btn btn-primary">Submit</button>
+        <a href="{% url 'Registrate' %}">Don't have an account yet?</a>
+    </form>
+{% endblock %}
