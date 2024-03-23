@@ -133,7 +133,7 @@ EMAIL_HOST = 'smtp.gmail.com'
 
 EMAIL_PORT = ''
 
-EMAIL_HOST_USER = 'galymzhan2007@gmail.com'
+EMAIL_HOST_USER = ''
 
 EMAIL_HOST_PASSWORD = ''
 
