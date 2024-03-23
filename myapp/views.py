@@ -1,11 +1,16 @@
 from django.shortcuts import render, redirect
 from .forms import TaskForm, FolderForm
 from .models import Task, Folder
+from projects.models import Project
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
-from django.core.mail import send_mail
+from rest_framework import generics
+
+from .permissons import IsAdminOnly, IsOwnerOnly
+from .serializers import TaskSerializer, FolderSerializer
+from rest_framework.permissions import IsAuthenticated
 
 
 @login_required
@@ -15,7 +20,6 @@ def createtask(request):
         if form.is_valid():
             name = form.cleaned_data['name']
 
-            # Проверяем, существует ли задача с таким же названием
             existing_task = Task.objects.filter(name=name, user=request.user).first()
 
             if not existing_task:
@@ -23,7 +27,10 @@ def createtask(request):
                 task.user = request.user
                 task.save()
 
-            return redirect('home')  # После создания задачи, перенаправляем пользователя на главную страницу
+            else:
+                messages.success(request, f"There's already the task named {name}!!!")
+
+            return redirect('home')
     else:
         form = TaskForm()
 
@@ -41,6 +48,7 @@ def home(request):
         return redirect('login')
 
 
+@login_required()
 def task(request, pk):
     task = Task.objects.get(id=pk)
     context = {'task': task}
@@ -76,18 +84,20 @@ def search_tasks(request):
     if query is not None:
         tasks = Task.objects.filter(Q(name__icontains=query) | Q(description__icontains=query))
         folders = Folder.objects.filter(name__icontains=query)
+        projects = Project.objects.filter(name__icontains=query)
         tasks = tasks.select_related('folder')
     else:
         tasks = []
         folders = []
+        projects = []
 
     context = {
         'tasks': tasks,
         'folders': folders,
+        'projects': projects,
         'query': query,
     }
     return render(request, 'search_task.html', context)
-
 
 @login_required
 def profile(request):
@@ -118,7 +128,7 @@ def update_folder(request, pk):
 
 @login_required
 def folder_list(request):
-    folders = Folder.objects.filter(project=None)
+    folders = Folder.objects.filter(user=request.user, project=None)
     return render(request, 'folder_list.html', {'folders': folders})
 
 
@@ -170,49 +180,36 @@ def delete_folder(request, pk):
 
 @login_required
 def createtaskf(request, folder_id):
-    folder = get_object_or_404(Folder, id=folder_id)  # Получаем папку по folder_id
+    folder = get_object_or_404(Folder, id=folder_id)
 
     if request.method == 'POST':
-        form = TaskForm(request.POST)  # Создаем форму на основе POST-данных
+        form = TaskForm(request.POST)
         if form.is_valid():
             task = form.save(commit=False)
             task.folder = folder
             task.save()
             return redirect('folder-detail', pk=folder_id)
+
     else:
-        form = TaskForm()  # Создаем пустую форму
+        form = TaskForm()
 
-    context = {
-        'folder_id': folder_id,
-        'form': form,  # Передаем форму в контекст
-    }
-    return render(request, 'create_task.html', context)
-
-
-def contact(request):
-    if request.method == 'POST':
-        name = request.POST['name']
-        email = request.POST['email']
-        phone = request.POST['phone']
         context = {
-            'name': name,
+            'folder_id': folder_id,
+            'form': form,
         }
-        send_mail(subject='Hello!', message='', from_email='', recipient_list=[email])
-        messages.success(request, 'Success')
-        return render(request, 'contact.html', context)
-    else:
-        return render(request, 'contact.html', {})
+        return render(request, 'create_task.html', context)
 
 
 @login_required
 def create_folder(request):
-
     if request.method == 'POST':
         form = FolderForm(request.POST)
         if form.is_valid():
             folder = form.save(commit=False)
+            folder.user = request.user
             folder.save()
             return redirect('folder-list')
+
     else:
         form = FolderForm()
 
@@ -220,3 +217,41 @@ def create_folder(request):
         'form': form,
     }
     return render(request, 'create_folder.html', context)
+
+
+class TaskAPIList(generics.ListCreateAPIView):
+    serializer_class = TaskSerializer
+    permission_classes = (IsOwnerOnly, )
+
+    def get_queryset(self):
+        user_tasks = Task.objects.filter(user=self.request.user, folder=None)
+        folder_tasks = Task.objects.filter(folder__user=self.request.user)
+        queryset = user_tasks | folder_tasks
+        return queryset
+
+
+class TaskAPIDetailView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = TaskSerializer
+    permission_classes = (IsOwnerOnly, )
+
+    def get_queryset(self):
+        return Task.objects.filter(user=self.request.user)
+
+
+class FolderAPIList(generics.ListCreateAPIView):
+    serializer_class = FolderSerializer
+    permission_classes = (IsOwnerOnly,)
+
+    def get_queryset(self):
+        folders = Folder.objects.filter(user=self.request.user)
+        project_folders = Folder.objects.filter(project__user=self.request.user)
+        queryset = folders | project_folders
+        return queryset
+
+
+class FolderAPIDetailView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = FolderSerializer
+    permission_classes = (IsOwnerOnly, )
+
+    def get_queryset(self):
+        return Folder.objects.filter(user=self.request.user)

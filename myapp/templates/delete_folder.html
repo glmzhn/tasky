@@ -5,7 +5,7 @@
     <p>Are you sure you want to delete the folder: "{{ folder.name }}"?</p>
     <form method="post">
         {% csrf_token %}
-        <button type="submit">Delete</button>
-        <a href="{% url 'folder-detail' folder.id %}">Cancel</a>
+        <button type="submit" class="btn btn-danger">Delete</button>
+        <a href="{% url 'folder-detail' folder.id %}" class="btn btn-primary">Cancel</a>
     </form>
 {% endblock %}

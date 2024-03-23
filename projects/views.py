@@ -1,12 +1,16 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from rest_framework.response import Response
+from myapp.permissons import IsOwnerOnly
 from .forms import ProjectForm, AddMemberForm
 from myapp.forms import FolderForm
 from django.contrib.auth.models import User
 from myapp.models import Folder
 from .models import Project, ProjectMember
 from django.shortcuts import get_object_or_404
+from .serializers import ProjectSerializer
+from rest_framework import generics
 
 
 @login_required
@@ -15,16 +19,17 @@ def create_project(request):
         form = ProjectForm(request.POST)
         if form.is_valid():
             project = form.save(commit=False)
-            project.creator = request.user
+            project.user = request.user
             project.save()
             project.members.add(request.user)
 
-            messages.success(request, 'New projects was created!')
-            return redirect('home')
+            messages.success(request, 'New project has been created!')
+            return redirect('project-list')
     else:
         form = ProjectForm()
 
-    return render(request, 'create_project.html', {'form': form})
+    projects = Project.objects.filter(user=request.user)
+    return render(request, 'create_project.html', {'form': form, 'projects': projects})
 
 
 @login_required
@@ -38,7 +43,7 @@ def delete_project(request, pk):
 
 @login_required
 def project_list(request):
-    projects = Project.objects.all()
+    projects = Project.objects.filter(user=request.user)
     return render(request, 'projects.html', {'projects': projects})
 
 
@@ -84,7 +89,8 @@ def add_member(request, project_id):
                 user = User.objects.get(username=username)
                 if not project.members.filter(id=user.id).exists():
                     project.members.add(user)
-                    messages.success(request, f'User {user.username} was added to the project.')
+                    user.projects.add(project)
+                    messages.success(request, f'User {user.username} has been added to the project.')
                 else:
                     messages.warning(request, f'User {user.username} is already a member of the project.')
             except User.DoesNotExist:
@@ -110,3 +116,22 @@ def createfolderp(request, project_id):
         folder_form = FolderForm()
 
     return render(request, 'create_folderp.html', {'folder_form': folder_form})
+
+
+class ProjectAPIList(generics.ListCreateAPIView):
+    serializer_class = ProjectSerializer
+    permission_classes = (IsOwnerOnly,)
+
+    def get_queryset(self):
+        return Project.objects.filter(user=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+
+class ProjectAPIDetailView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = ProjectSerializer
+    permission_classes = (IsOwnerOnly, )
+
+    def get_queryset(self):
+        return Project.objects.filter(user=self.request.user)

@@ -4,8 +4,8 @@ from django.contrib.auth.models import User
 
 class Project(models.Model):
     name = models.CharField(max_length=100)
-    creator = models.ForeignKey(User, on_delete=models.CASCADE)
-    members = models.ManyToManyField(User, related_name='projects')
+    user = models.ForeignKey(User, blank=True, on_delete=models.CASCADE, null=False)
+    members = models.ManyToManyField(User, related_name='projects', blank=True)
 
 
 class ProjectMember(models.Model):

@@ -5,6 +5,10 @@
 {% block content %}
     {% csrf_token %}
     <h1>List of Folders</h1>
+
+    <a href="{% url 'create-folder' %}" class="btn btn-primary">Create New Folder</a>
+    <br><br>
+
     <ul>
         {% for folder in folders %}
             <li><a href="{% url 'folder-detail' folder.id %}">{{ folder.name }}</a></li>
